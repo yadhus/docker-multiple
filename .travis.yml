@@ -1,0 +1,24 @@
+language: generic
+dist: xenial
+os: linux
+services:
+  - docker
+
+before_install:
+  - docker build -t yadhus/docker-multi -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true yadhus/docker-multi npm run test
+
+after_success:
+  - docker build -t yadhus/multi-client ./client
+  - docker build -t yadhus/multi-nginx ./nginx
+  - docker build -t yadhus/multi-server ./server
+  - docker build -t yadhus/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login --username=$DOCKER_ID --password-stdin
+  # push the images to docker hub
+  - docker push yadhus/multi-client
+  - docker push yadhus/multi-nginx
+  - docker push yadhus/multi-server
+  - docker push yadhus/multi-worker
